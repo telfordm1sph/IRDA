@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\SystemStatusService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -17,6 +18,12 @@ class AuthMiddleware
 
     public function handle(Request $request, Closure $next)
     {
+        // Internal service-to-service calls (e.g. Authify fetching employee data
+        // during login) carry X-Internal-Key and must bypass SSO entirely.
+        if ($request->header('X-Internal-Key') === config('services.internal.key')) {
+            return $next($request);
+        }
+
         $cookieName = env('SSO_COOKIE_NAME', 'sso_token');
 
         // 1️⃣ Get token sources (priority: query → cookie → session)
@@ -61,7 +68,8 @@ class AuthMiddleware
                 }
             }
 
-            return $next($request)->withCookie($cookie);
+            Cookie::queue($cookie);
+            return $next($request);
         }
 
         // 🔹 Fetch user from authify if session missing or token mismatch
@@ -84,7 +92,7 @@ class AuthMiddleware
             session()->forget('emp_data');
             session()->flush();
             $redirectUrl = urlencode(route('dashboard'));
-            $authifyUrl  = "http://192.168.2.221:8200/logout?redirect={$redirectUrl}";
+            $authifyUrl  = "http://127.0.0.1:8001/logout?redirect={$redirectUrl}";
 
             return Inertia::render('Unauthorized', [
                 'logoutUrl' => $authifyUrl,
@@ -96,18 +104,20 @@ class AuthMiddleware
 
         Log::info('User roles fetched', ['emp_id' => $userId]);
 
-        // 🔹 Set session
+
+        // 🔹 Set session — IDs only, names resolved via HRIS Lookup API
         session(['emp_data' => [
-            'token'         => $currentUser->token,
-            'emp_id'        => $currentUser->emp_id,
-            'emp_name'      => $currentUser->emp_name,
-            'emp_firstname' => $currentUser->emp_firstname,
-            'emp_jobtitle'  => $currentUser->emp_jobtitle,
-            'emp_dept'      => $currentUser->emp_dept,
-            'emp_prodline'  => $currentUser->emp_prodline,
-            'emp_station'   => $currentUser->emp_station,
-            'emp_position'  => $currentUser->emp_position,
-            'generated_at'  => $currentUser->generated_at,
+            'token'          => $currentUser->token,
+            'emp_id'         => $currentUser->emp_id,
+            'emp_name'       => $currentUser->emp_name,
+            'emp_firstname'  => $currentUser->emp_firstname,
+            'emp_dept_id'      => $currentUser->emp_dept_id,
+            'emp_jobtitle_id'  => $currentUser->emp_jobtitle_id,
+            'emp_prodline_id'  => $currentUser->emp_prodline_id,
+            'emp_position_id'  => $currentUser->emp_position_id,
+            'emp_station_id'   => $currentUser->emp_station_id,
+
+            'generated_at'   => $currentUser->generated_at,
         ]]);
 
         session()->save();
@@ -135,7 +145,8 @@ class AuthMiddleware
             }
         }
 
-        return $next($request)->withCookie($cookie);
+        Cookie::queue($cookie);
+        return $next($request);
     }
 
     /**
@@ -171,6 +182,6 @@ class AuthMiddleware
     private function redirectToLogin(Request $request)
     {
         $redirectUrl = urlencode($request->fullUrl());
-        return redirect("http://192.168.2.221:8200/login?redirect={$redirectUrl}");
+        return redirect("http://127.0.0.1:8001/login?redirect={$redirectUrl}");
     }
 }
