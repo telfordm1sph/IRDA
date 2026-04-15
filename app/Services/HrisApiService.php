@@ -205,6 +205,38 @@ class HrisApiService
     }
 
     /**
+     * Fetch all direct reports for a supervisor from HRIS.
+     *
+     * Response shape: { success: true, data: [{ emp_id, emp_name, prodline_id, prodline,
+     *                                             department_id, department, station_id, station }] }
+     *
+     * Returns an array of direct-report rows, empty on failure.
+     */
+    public function fetchDirectReports(int $empId): array
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-Internal-Key' => $this->key,
+            ])->get("{$this->baseUrl}/api/employees/direct-reports/{$empId}");
+
+            if ($response->failed()) {
+                Log::warning('HRIS fetchDirectReports failed', [
+                    'emp_id' => $empId,
+                    'status' => $response->status(),
+                ]);
+                return [];
+            }
+
+            $data = $response->json('data');
+
+            return is_array($data) ? $data : [];
+        } catch (\Exception $e) {
+            Log::error("HRIS fetchDirectReports exception: {$e->getMessage()}", ['emp_id' => $empId]);
+            return [];
+        }
+    }
+
+    /**
      * Check if work data is usable — skip employees with missing/invalid dates.
      * Expects the normalized array returned by fetchWorkDetails().
      */

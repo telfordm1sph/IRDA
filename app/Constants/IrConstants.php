@@ -4,54 +4,164 @@ namespace App\Constants;
 
 class IrConstants
 {
-    // ── DA / Disciplinary Action Types ────────────────────────────────────────
-    const DA_VERBAL_WARNING   = 1;
-    const DA_WRITTEN_WARNING  = 2;
-    const DA_3_DAY_SUSPENSION = 3;
-    const DA_7_DAY_SUSPENSION = 4;
-    const DA_DISMISSAL        = 5;
+    // ── IR Status (ir_requests.ir_status) ────────────────────────────────────
+    const IR_PENDING   = 0;  // just created, awaiting HR action
+    const IR_VALIDATED = 1;  // HR actioned — now in LOE/assessment/hearing flow
+    const IR_APPROVED  = 2;  // disposition valid — DA phase
+    const IR_INVALID   = 3;  // disposition invalid
+    const IR_CANCELLED = 4;
 
-    const DA_TYPES = [
-        self::DA_VERBAL_WARNING   => 'Verbal Warning',
-        self::DA_WRITTEN_WARNING  => 'Written Warning',
-        self::DA_3_DAY_SUSPENSION => '3-Day Suspension',
-        self::DA_7_DAY_SUSPENSION => '7-Day Suspension',
-        self::DA_DISMISSAL        => 'Dismissal',
+    const IR_STATUS_LABELS = [
+        self::IR_PENDING   => 'Pending',
+        self::IR_VALIDATED => 'In Progress',
+        self::IR_APPROVED  => 'Approved',
+        self::IR_INVALID   => 'Invalid',
+        self::IR_CANCELLED => 'Cancelled',
     ];
 
-    // ── IR Status ─────────────────────────────────────────────────────────────
-    const IR_STATUS_PENDING   = 0;
-    const IR_STATUS_APPROVED  = 1;
-    const IR_STATUS_REJECTED  = 2;
-    const IR_STATUS_CANCELLED = 3;
+    // ── Approval Status (ir_approvals.status) ────────────────────────────────
+    const APPROVAL_PENDING    = 0;
+    const APPROVAL_APPROVED   = 1;
+    const APPROVAL_DISAPPROVED = 2;
 
-    const IR_STATUSES = [
-        self::IR_STATUS_PENDING   => 'Pending',
-        self::IR_STATUS_APPROVED  => 'Approved',
-        self::IR_STATUS_REJECTED  => 'Rejected',
-        self::IR_STATUS_CANCELLED => 'Cancelled',
+    // ── Approval Roles (ir_approvals.role) ───────────────────────────────────
+    const ROLE_SV       = 'sv';        // Immediate Supervisor (requestor/reporter)
+    const ROLE_HR       = 'hr';        // HR Personnel — validates IR
+    const ROLE_DH       = 'dh';        // Department Head/Manager — approves IR
+    const ROLE_OD       = 'od';        // Operations Director
+    const ROLE_HR_MNGR  = 'hr_mngr';  // HR Manager — signs DA
+    const ROLE_DM       = 'dm';        // Division Manager
+    const ROLE_DA       = 'da';        // DA officer
+
+    const APPROVAL_ROLES = [
+        self::ROLE_SV,
+        self::ROLE_HR,
+        self::ROLE_DH,
+        self::ROLE_OD,
+        self::ROLE_HR_MNGR,
+        self::ROLE_DM,
+        self::ROLE_DA,
     ];
 
-    // ── Read Status ───────────────────────────────────────────────────────────
-    const READ_UNREAD = 0;
-    const READ_READ   = 1;
+    // ── DA Status (ir_da_requests.da_status) ─────────────────────────────────
+    // Mirrors old system da_status — kept identical so migrated records align
+    const DA_CREATED              = 0;  // DA record created by HR
+    const DA_FOR_HR_MANAGER       = 1;  // waiting HR Manager signature
+    const DA_FOR_SUPERVISOR       = 2;  // waiting Dept Supervisor signature
+    const DA_FOR_DEPT_MANAGER     = 3;  // waiting Dept Manager/Head signature
+    const DA_FOR_ACKNOWLEDGEMENT  = 4;  // waiting Person Involved to acknowledge
+    const DA_ACKNOWLEDGED         = 5;  // fully signed and acknowledged
 
-    // ── Violation Type ────────────────────────────────────────────────────────
+    const DA_STATUS_LABELS = [
+        self::DA_CREATED              => 'For DA',
+        self::DA_FOR_HR_MANAGER       => 'For HR Manager',
+        self::DA_FOR_SUPERVISOR       => 'DA: For Supervisor',
+        self::DA_FOR_DEPT_MANAGER     => 'DA: For Dept Manager',
+        self::DA_FOR_ACKNOWLEDGEMENT  => 'For Acknowledgement',
+        self::DA_ACKNOWLEDGED         => 'Acknowledged',
+    ];
+
+    // ── Violation Type (ir_requests.quality_violation) ───────────────────────
     const VIOLATION_ADMINISTRATIVE = 0;
     const VIOLATION_QUALITY        = 1;
 
-    // ── Approval Roles ────────────────────────────────────────────────────────
-    const APPROVAL_ROLES = ['sv', 'dh', 'od', 'hr', 'hr_mngr', 'dm', 'da'];
+    // ── Read Status (ir_requests.read_status) ────────────────────────────────
+    const READ_UNREAD = 0;
+    const READ_READ   = 1;
+
+    // ── DA Types (ir_list.da_type) ────────────────────────────────────────────
+    const DA_VERBAL_WARNING    = 1;
+    const DA_WRITTEN_WARNING   = 2;
+    const DA_3_DAY_SUSPENSION  = 3;
+    const DA_7_DAY_SUSPENSION  = 4;
+    const DA_DISMISSAL         = 5;
+
+    const DA_TYPES = [
+        self::DA_VERBAL_WARNING    => 'Verbal Warning',
+        self::DA_WRITTEN_WARNING   => 'Written Warning',
+        self::DA_3_DAY_SUSPENSION  => '3-Day Suspension',
+        self::DA_7_DAY_SUSPENSION  => '7-Day Suspension',
+        self::DA_DISMISSAL         => 'Dismissal',
+    ];
+
+    // ── Display Status list for frontend filter dropdown ─────────────────────
+    const IR_DISPLAY_STATUSES = [
+        'Pending',
+        'Disapproved',
+        'Letter of Explanation',
+        'For Assessment',
+        'For Validation',
+        'IR: For Dept Approval',
+        'For DA',
+        'For HR Manager',
+        'DA: For Supervisor',
+        'DA: For Dept Manager',
+        'For Acknowledgement',
+        'Acknowledged',
+        'Invalid',
+        'Cancelled',
+        'Inactive',
+    ];
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    public static function daLabel(int $value): string
+    public static function irStatusLabel(int $value): string
+    {
+        return self::IR_STATUS_LABELS[$value] ?? '—';
+    }
+
+    public static function daStatusLabel(int $value): string
+    {
+        return self::DA_STATUS_LABELS[$value] ?? '—';
+    }
+
+    public static function daTypeLabel(int $value): string
     {
         return self::DA_TYPES[$value] ?? '—';
     }
 
-    public static function irStatusLabel(int $value): string
-    {
-        return self::IR_STATUSES[$value] ?? '—';
+    /**
+     * Compute the human-readable status label from the new normalized schema.
+     * Pass in the ir_request row + eager-loaded relationships.
+     *
+     * @param  object  $ir          ir_requests row
+     * @param  object|null  $hrApproval  ir_approvals row where role='hr'
+     * @param  object|null  $svApproval  ir_approvals row where role='sv'
+     * @param  object|null  $dhApproval  ir_approvals row where role='dh'
+     * @param  object|null  $da          ir_da_requests row (if exists)
+     * @param  bool    $hasLoe      whether ir_reasons has a row for this ir_no
+     */
+    public static function resolveDisplayStatus(
+        object $ir,
+        ?object $hrApproval,
+        ?object $svApproval,
+        ?object $dhApproval,
+        ?object $da,
+        bool $hasLoe
+    ): string {
+        if ($ir->is_inactive) return 'Inactive';
+
+        switch ($ir->ir_status) {
+            case self::IR_PENDING:
+                if ($hrApproval?->status === self::APPROVAL_DISAPPROVED)
+                    return 'Disapproved';
+                return 'Pending';
+
+            case self::IR_VALIDATED:
+                if (!$hasLoe)                                          return 'Letter of Explanation';
+                if ($svApproval?->status === self::APPROVAL_PENDING)   return 'For Assessment';
+                if ($hrApproval?->status === self::APPROVAL_PENDING)   return 'For Validation';
+                if ($dhApproval?->status === self::APPROVAL_PENDING)   return 'IR: For Dept Approval';
+                return 'In Progress';
+
+            case self::IR_APPROVED:
+                if (!$da) return 'For DA';
+                return self::daStatusLabel($da->da_status);
+
+            case self::IR_INVALID:   return 'Invalid';
+            case self::IR_CANCELLED: return 'Cancelled';
+        }
+
+        return '—';
     }
 }

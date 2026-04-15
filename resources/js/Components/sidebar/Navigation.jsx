@@ -1,6 +1,7 @@
 import { usePage } from "@inertiajs/react";
 import SidebarLink from "@/Components/sidebar/SidebarLink";
-import { FilePlus, LayoutDashboard } from "lucide-react";
+import Dropdown from "@/Components/sidebar/DropDown";
+import { FileWarning, LayoutDashboard } from "lucide-react";
 
 export default function NavLinks({ isSidebarOpen }) {
     const { emp_data } = usePage().props;
@@ -16,11 +17,14 @@ export default function NavLinks({ isSidebarOpen }) {
                 icon={<LayoutDashboard className="w-5 h-5" />}
                 isSidebarOpen={isSidebarOpen}
             />
-            <SidebarLink
-                href={route("ir.create")}
-                label="Create IR"
-                icon={<FilePlus className="w-5 h-5" />}
+            <Dropdown
+                label="Incident Report"
+                icon={<FileWarning className="w-5 h-5" />}
                 isSidebarOpen={isSidebarOpen}
+                links={[
+                    { href: route("ir.index"),  label: "IR List" },
+                    { href: route("ir.create"), label: "Create IR" },
+                ]}
             />
         </nav>
     );

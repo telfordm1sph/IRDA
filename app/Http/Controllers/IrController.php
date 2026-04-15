@@ -16,11 +16,22 @@ class IrController extends Controller
         protected IrRequestService $service
     ) {}
 
+    public function index(Request $request): Response
+    {
+        $empId = (int) session('emp_data.emp_id');
+
+        return Inertia::render('IR/IndexIR', [
+            'irList'        => fn () => $this->service->getIrList($request, $empId),
+            'filters'       => $request->only(['search', 'status', 'tab', 'start', 'end', 'perPage', 'empId']),
+            'statusOptions' => IrConstants::IR_DISPLAY_STATUSES,
+        ]);
+    }
+
     public function create(Request $request): Response
     {
         return Inertia::render('IR/CreateIR', [
             'daTypes'   => IrConstants::DA_TYPES,
-            'irStatuses' => IrConstants::IR_STATUSES,
+            'irStatuses' => IrConstants::IR_STATUS_LABELS,
         ]);
     }
 

@@ -27,6 +27,7 @@ Route::prefix($app_name)->middleware(AuthMiddleware::class)->group(function () {
   Route::post("/change-password", [ProfileController::class, 'changePassword'])->name('changePassword');
 
   // Incident Report
+  Route::get("/ir", [IrController::class, 'index'])->name('ir.index');
   Route::get("/ir/create", [IrController::class, 'create'])->name('ir.create');
   Route::post("/ir/store", [IrController::class, 'store'])->name('ir.store');
   Route::get("/ir/employees/search", [IrController::class, 'searchEmployees'])->name('ir.searchEmployees');
