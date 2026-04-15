@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\IrConstants;
 use App\Services\IrRequestService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +18,10 @@ class IrController extends Controller
 
     public function create(Request $request): Response
     {
-        return Inertia::render('IR/CreateIR');
+        return Inertia::render('IR/CreateIR', [
+            'daTypes'   => IrConstants::DA_TYPES,
+            'irStatuses' => IrConstants::IR_STATUSES,
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
@@ -37,7 +41,7 @@ class IrController extends Controller
             'items.*.date_committed'      => 'required|date',
             'items.*.offense_no'          => 'nullable|string|max:250',
             'approvals'                   => 'nullable|array',
-            'approvals.*.role'            => 'required|string|in:sv,dh,od,hr,hr_mngr,dm,da',
+            'approvals.*.role'            => 'required|string|in:' . implode(',', IrConstants::APPROVAL_ROLES),
             'approvals.*.approver_name'   => 'nullable|string|max:255',
             'approvals.*.approver_emp_no' => 'nullable|integer',
         ]);

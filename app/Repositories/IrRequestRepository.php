@@ -2,6 +2,7 @@
 
 namespace App\Repositories;
 
+use App\Constants\IrConstants;
 use App\Models\IrApproval;
 use App\Models\IrCodeNo;
 use App\Models\IrList;
@@ -76,8 +77,8 @@ class IrRequestRepository
                 'when_date'         => $data['when_date'],
                 'where_loc'         => $data['where_loc'],
                 'how'               => $data['how'],
-                'ir_status'         => 0,
-                'read_status'       => 0,
+                'ir_status'         => IrConstants::IR_STATUS_PENDING,
+                'read_status'       => IrConstants::READ_UNREAD,
                 'is_inactive'       => 0,
                 'date_created'      => now(),
                 'date_updated'      => now(),
