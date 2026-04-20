@@ -48,16 +48,18 @@ class IrController extends Controller
         $irModel = $this->service->getIrModel($id);
         if (!$irModel) abort(404);
 
-        $ir              = $this->service->getIrDetail($id);
-        $currentUserRole = $this->service->resolveCurrentUserRole($irModel, $empId);
+        $ir               = $this->service->getIrDetail($id);
+        $currentUserRole  = $this->service->resolveCurrentUserRole($irModel, $empId);
+        $availableActions = $this->service->resolveAvailableActions($irModel, $currentUserRole, $empId, $ir['company_id'] ?? null);
 
         return Inertia::render('IR/ShowIR', [
-            'ir'              => $ir,
-            'hash'            => $hash,
-            'daTypes'         => IrConstants::DA_TYPES,
-            'currentUserRole' => $currentUserRole,
-            'currentEmpId'    => $empId,
-            'isRequestor'     => (int) $irModel->requestor_id === $empId,
+            'ir'               => $ir,
+            'hash'             => $hash,
+            'daTypes'          => IrConstants::DA_TYPES,
+            'currentUserRole'  => $currentUserRole,
+            'currentEmpId'     => $empId,
+            'isRequestor'      => (int) $irModel->requestor_id === $empId,
+            'availableActions' => $availableActions,
         ]);
     }
 
@@ -75,14 +77,22 @@ class IrController extends Controller
             return redirect()->route('ir.show', $hash);
         }
 
-        $ir              = $this->service->getIrDetail($id);
-        $currentUserRole = $this->service->resolveCurrentUserRole($irModel, $empId);
+        $ir               = $this->service->getIrDetail($id);
+
+        // IR-only companies never have a DA — redirect back to IR view
+        if (in_array((int) ($ir['company_id'] ?? 0), IrConstants::IR_ONLY_COMPANY_IDS)) {
+            return redirect()->route('ir.show', $hash);
+        }
+
+        $currentUserRole  = $this->service->resolveCurrentUserRole($irModel, $empId);
+        $availableActions = $this->service->resolveAvailableActions($irModel, $currentUserRole, $empId, $ir['company_id'] ?? null);
 
         return Inertia::render('IR/ShowDA', [
-            'ir'              => $ir,
-            'hash'            => $hash,
-            'currentUserRole' => $currentUserRole,
-            'currentEmpId'    => $empId,
+            'ir'               => $ir,
+            'hash'             => $hash,
+            'currentUserRole'  => $currentUserRole,
+            'currentEmpId'     => $empId,
+            'availableActions' => $availableActions,
         ]);
     }
 
@@ -214,6 +224,13 @@ class IrController extends Controller
         $ir = $this->resolveIrModel($hash);
         $this->assertRole($ir, 'hr');
 
+        // Server-side guard: IR-only companies cannot receive a DA
+        $companyId = $this->service->getEmployeeCompanyId($ir);
+        if (in_array($companyId, IrConstants::IR_ONLY_COMPANY_IDS)) {
+            return redirect()->route('ir.show', $hash)
+                ->with('error', 'Disciplinary Action is not applicable for employees of this company.');
+        }
+
         $this->service->issueDa($ir, $this->currentEmpId());
 
         return redirect()->route('ir.show', $hash)
@@ -229,7 +246,7 @@ class IrController extends Controller
 
         $this->service->hrManagerApprove($ir, $this->currentEmpId());
 
-        return redirect()->route('ir.show', $hash)
+        return redirect()->route('ir.show.da', $hash)
             ->with('success', 'DA approved by HR Manager.');
     }
 
@@ -242,7 +259,7 @@ class IrController extends Controller
 
         $this->service->svAcknowledge($ir, $this->currentEmpId());
 
-        return redirect()->route('ir.show', $hash)
+        return redirect()->route('ir.show.da', $hash)
             ->with('success', 'DA acknowledged by Supervisor.');
     }
 
@@ -255,7 +272,7 @@ class IrController extends Controller
 
         $this->service->dmAcknowledge($ir, $this->currentEmpId());
 
-        return redirect()->route('ir.show', $hash)
+        return redirect()->route('ir.show.da', $hash)
             ->with('success', 'DA acknowledged by Department Manager.');
     }
 
@@ -268,7 +285,7 @@ class IrController extends Controller
 
         $this->service->employeeAcknowledge($ir);
 
-        return redirect()->route('ir.show', $hash)
+        return redirect()->route('ir.show.da', $hash)
             ->with('success', 'You have acknowledged the Disciplinary Action.');
     }
 

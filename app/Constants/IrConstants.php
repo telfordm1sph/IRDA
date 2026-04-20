@@ -61,6 +61,10 @@ class IrConstants
         self::DA_ACKNOWLEDGED         => 'Acknowledged',
     ];
 
+    // ── IR-only companies — these skip the DA phase entirely ─────────────────
+    // Employees whose company_id is in this list go through IR but never receive a DA.
+    const IR_ONLY_COMPANY_IDS = [5];
+
     // ── Violation Type (ir_requests.quality_violation) ───────────────────────
     const VIOLATION_ADMINISTRATIVE = 0;
     const VIOLATION_QUALITY        = 1;

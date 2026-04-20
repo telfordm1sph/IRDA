@@ -203,6 +203,8 @@ class IrRequestService
             'ir_no'             => $ir->ir_no,
             'emp_no'            => $ir->emp_no,
             'emp_name'          => $nameMap[$ir->emp_no] ?? null,
+            'company_id'        => (int) ($workRaw['company_id'] ?? 0),
+            'company'           => $workRaw['company'] ?? null,
             'shift'             => $workRaw['shift_type']   ?? null,
             'team'              => $workRaw['team']         ?? null,
             'department'        => $workRaw['emp_dept']   ?? null,
@@ -523,6 +525,89 @@ class IrRequestService
             'acknowledge_da'   => true,
             'acknowledge_date' => now(),
         ]);
+    }
+
+    /**
+     * Compute which actions are available for the current user on this IR.
+     * Single source of truth — frontend reads these flags from props.
+     */
+    public function resolveAvailableActions(IrRequest $ir, ?string $currentUserRole, int $empId, ?int $companyId = null): array
+    {
+        $byRole     = $ir->approvals->keyBy('role');
+        $hrApproval = $byRole->get(IrConstants::ROLE_HR);
+        $svApproval = $byRole->get(IrConstants::ROLE_SV);
+        $dhApproval = $byRole->get(IrConstants::ROLE_DH);
+        $da         = $ir->daRequest;
+        $hasLoe     = $ir->reasons->isNotEmpty();
+
+        // Employees from these companies go through IR only — no DA phase.
+        $isIrOnly = $companyId !== null && in_array($companyId, IrConstants::IR_ONLY_COMPANY_IDS);
+
+        return [
+            // ── IR Phase ──────────────────────────────────────────────────────
+            'hrCanValidate'      => $currentUserRole === IrConstants::ROLE_HR
+                && $ir->ir_status === IrConstants::IR_PENDING
+                && $hrApproval?->status !== IrConstants::APPROVAL_APPROVED,
+
+            'requestorCanEdit'   => (int) $ir->requestor_id === $empId
+                && $ir->ir_status === IrConstants::IR_PENDING
+                && $hrApproval?->status === IrConstants::APPROVAL_DISAPPROVED,
+
+            'empCanSubmitLoe'    => $currentUserRole === 'employee'
+                && $ir->ir_status === IrConstants::IR_VALIDATED
+                && !$hasLoe,
+
+            'svCanAssess'        => $currentUserRole === IrConstants::ROLE_SV
+                && $ir->ir_status === IrConstants::IR_VALIDATED
+                && $hasLoe
+                && (!$svApproval || $svApproval->status !== IrConstants::APPROVAL_APPROVED),
+
+            'hrCanRevalidate'    => $currentUserRole === IrConstants::ROLE_HR
+                && $ir->ir_status === IrConstants::IR_VALIDATED
+                && $svApproval?->status === IrConstants::APPROVAL_APPROVED
+                && !$hrApproval?->da_sign_date,
+
+            'dhCanReview'        => $currentUserRole === IrConstants::ROLE_DH
+                && $ir->ir_status === IrConstants::IR_VALIDATED
+                && (bool) $hrApproval?->da_sign_date
+                && $dhApproval?->status !== IrConstants::APPROVAL_APPROVED,
+
+            // ── DA Phase — blocked for IR-only companies ──────────────────────
+            'hrCanIssueDa'       => !$isIrOnly
+                && $currentUserRole === IrConstants::ROLE_HR
+                && $ir->ir_status === IrConstants::IR_APPROVED
+                && !$da,
+
+            'hrMngrCanApproveDa' => !$isIrOnly
+                && $currentUserRole === IrConstants::ROLE_HR_MNGR
+                && $ir->ir_status === IrConstants::IR_APPROVED
+                && $da?->da_status === IrConstants::DA_FOR_HR_MANAGER,
+
+            'svCanAckDa'         => !$isIrOnly
+                && $currentUserRole === IrConstants::ROLE_SV
+                && $ir->ir_status === IrConstants::IR_APPROVED
+                && $da?->da_status === IrConstants::DA_FOR_SUPERVISOR,
+
+            'dhCanAckDa'         => !$isIrOnly
+                && $currentUserRole === IrConstants::ROLE_DH
+                && $ir->ir_status === IrConstants::IR_APPROVED
+                && $da?->da_status === IrConstants::DA_FOR_DEPT_MANAGER,
+
+            'empCanAckDa'        => !$isIrOnly
+                && $currentUserRole === 'employee'
+                && $ir->ir_status === IrConstants::IR_APPROVED
+                && $da?->da_status === IrConstants::DA_FOR_ACKNOWLEDGEMENT,
+        ];
+    }
+
+    /**
+     * Fetch just the company_id for an employee from HRIS work details.
+     * Used as a lightweight guard before DA actions.
+     */
+    public function getEmployeeCompanyId(IrRequest $ir): ?int
+    {
+        $work = $this->hris->fetchWorkDetails((int) $ir->emp_no);
+        return isset($work['company_id']) ? (int) $work['company_id'] : null;
     }
 
     public function resubmitIr(IrRequest $ir, array $data): void

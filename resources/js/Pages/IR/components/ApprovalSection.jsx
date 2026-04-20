@@ -1,40 +1,76 @@
-import { Input } from "@/Components/ui/input";
 import { Badge } from "@/Components/ui/badge";
-import { DatePicker } from "@/Components/ui/date-picker";
-import { ClipboardCheck } from "lucide-react";
+import { Input } from "@/Components/ui/input";
+import { Card, CardContent } from "@/Components/ui/card";
+import { ClipboardCheck, CheckCircle2, Clock3, CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { SectionCard } from "./IrShared";
 
 const APPROVAL_META = [
-    { label: "Reported by", sublabel: "Name", readOnly: true },
-    { label: "For Validation", sublabel: "HR Personnel", readOnly: true },
-    { label: "For Approval", sublabel: "Approver 1", readOnly: true },
-    { label: "For Approval", sublabel: "Approver 2", readOnly: true },
+    { label: "Reported by", sublabel: "Name", step: 1 },
+    { label: "For Validation", sublabel: "HR Personnel", step: 2 },
+    { label: "For Approval", sublabel: "Approver 1 (Supervisor)", step: 3 },
+    { label: "For Approval", sublabel: "Approver 2 (Dept Head)", step: 4 },
 ];
 
 export function ApprovalSection({ approvals, updateApproval }) {
     return (
         <SectionCard icon={ClipboardCheck} title="Approval & Validation">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
-                {APPROVAL_META.map(({ label, sublabel, readOnly }, idx) => {
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {APPROVAL_META.map(({ label, sublabel, step }, idx) => {
                     const approval = approvals[idx];
                     const hasEmpNo = !!approval?.approver_emp_no;
-                    const hasName = !!approval?.approver_name;
-                    const hasDate = !!approval?.sign_date;
+                    const hasName  = !!approval?.approver_name;
+                    const hasDate  = !!approval?.sign_date;
+                    const assigned = hasName;
 
                     return (
-                        <div
+                        <Card
                             key={idx}
-                            className="grid grid-cols-[minmax(0,1fr)_14rem] gap-3 items-start"
+                            className={cn(
+                                "border transition-colors shadow-sm",
+                                assigned
+                                    ? "bg-green-50/40 border-green-200/70 dark:bg-green-900/10 dark:border-green-800/40"
+                                    : "bg-muted/10 border-border/60",
+                            )}
                         >
-                            <div className="min-w-0">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
-                                    {label}
-                                </p>
-                                <div className="flex items-center gap-2 h-9">
+                            <CardContent className="p-4 space-y-3">
+                                {/* Header: step label + status badge */}
+                                <div className="flex items-center justify-between gap-2">
+                                    <div>
+                                        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                                            Step {step} — {label}
+                                        </p>
+                                        <p className="text-sm font-semibold text-foreground mt-0.5">
+                                            {sublabel}
+                                        </p>
+                                    </div>
+                                    <span
+                                        className={cn(
+                                            "inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0",
+                                            assigned
+                                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                                : "bg-muted text-muted-foreground",
+                                        )}
+                                    >
+                                        {assigned ? (
+                                            <>
+                                                <CheckCircle2 className="w-3 h-3" />
+                                                Assigned
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Clock3 className="w-3 h-3" />
+                                                Pending
+                                            </>
+                                        )}
+                                    </span>
+                                </div>
+
+                                {/* Name field */}
+                                <div className="flex items-center gap-2">
                                     {hasEmpNo && (
-                                        <span className="shrink-0 font-mono text-xs text-muted-foreground bg-muted/60 border rounded px-1.5 py-1">
+                                        <span className="shrink-0 font-mono text-xs text-muted-foreground bg-muted/70 border rounded px-1.5 py-1">
                                             #{approval.approver_emp_no}
                                         </span>
                                     )}
@@ -43,36 +79,29 @@ export function ApprovalSection({ approvals, updateApproval }) {
                                             value={approval.approver_name}
                                             readOnly
                                             disabled
-                                            className="text-sm flex-1 bg-muted/40"
+                                            className={cn(
+                                                "text-sm flex-1 h-8",
+                                                assigned
+                                                    ? "bg-green-50/60 border-green-200/60"
+                                                    : "bg-muted/40",
+                                            )}
                                         />
                                     ) : (
-                                        <Badge variant="outline" className="text-muted-foreground">
-                                            Pending
-                                        </Badge>
+                                        <span className="text-sm text-muted-foreground italic">
+                                            Not yet assigned
+                                        </span>
                                     )}
                                 </div>
-                                <p className="text-[11px] text-left text-muted-foreground mt-1.5">
-                                    {sublabel}
-                                </p>
-                            </div>
 
-                            <div className="w-full min-w-0">
-                                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
-                                    Date
-                                </p>
-                                {hasDate ? (
-                                    <Input
-                                        readOnly
-                                        value={format(new Date(approval.sign_date), "MMM d, yyyy")}
-                                        className="h-9 w-full text-sm bg-muted/40"
-                                    />
-                                ) : (
-                                    <Badge variant="outline" className="text-muted-foreground">
-                                        Pending
-                                    </Badge>
+                                {/* Date — only shown when signed */}
+                                {hasDate && (
+                                    <div className="flex items-center gap-1.5 pt-1 border-t border-border/40 text-xs text-muted-foreground">
+                                        <CalendarDays className="w-3 h-3 shrink-0" />
+                                        {format(new Date(approval.sign_date), "MMM d, yyyy")}
+                                    </div>
                                 )}
-                            </div>
-                        </div>
+                            </CardContent>
+                        </Card>
                     );
                 })}
             </div>

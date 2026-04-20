@@ -517,7 +517,7 @@ export function PrintableDA({ ir }) {
                 </h3>
                 <p style={{ fontSize: 11, lineHeight: 1.65, marginBottom: 6 }}>
                     I, <u style={{ fontStyle: "italic" }}>{ir.emp_name}</u>,
-                    understand the seriousness of my actions and the potential
+                    ,understand the seriousness of my actions and the potential
                     consequences that may arise from such violations. I want to
                     assure you that I take full responsibility for my behavior
                     and am committed to rectifying the situation. Moving
