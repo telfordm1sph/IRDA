@@ -1,4 +1,5 @@
 import { Input } from "@/Components/ui/input";
+import { Badge } from "@/Components/ui/badge";
 import { DatePicker } from "@/Components/ui/date-picker";
 import { ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,10 +7,10 @@ import { format } from "date-fns";
 import { SectionCard } from "./IrShared";
 
 const APPROVAL_META = [
-    { label: "Reported by",    sublabel: "Name",         readOnly: true  },
-    { label: "For Validation", sublabel: "HR Personnel", readOnly: false },
-    { label: "For Approval",   sublabel: "Approver 1",   readOnly: false },
-    { label: "For Approval",   sublabel: "Approver 2",   readOnly: false },
+    { label: "Reported by", sublabel: "Name", readOnly: true },
+    { label: "For Validation", sublabel: "HR Personnel", readOnly: true },
+    { label: "For Approval", sublabel: "Approver 1", readOnly: true },
+    { label: "For Approval", sublabel: "Approver 2", readOnly: true },
 ];
 
 export function ApprovalSection({ approvals, updateApproval }) {
@@ -18,7 +19,9 @@ export function ApprovalSection({ approvals, updateApproval }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">
                 {APPROVAL_META.map(({ label, sublabel, readOnly }, idx) => {
                     const approval = approvals[idx];
-                    const hasName  = !!approval?.approver_name;
+                    const hasEmpNo = !!approval?.approver_emp_no;
+                    const hasName = !!approval?.approver_name;
+                    const hasDate = !!approval?.sign_date;
 
                     return (
                         <div
@@ -29,19 +32,25 @@ export function ApprovalSection({ approvals, updateApproval }) {
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
                                     {label}
                                 </p>
-                                <Input
-                                    value={approval?.approver_name ?? ""}
-                                    onChange={(e) =>
-                                        !readOnly && updateApproval(idx, "approver_name", e.target.value)
-                                    }
-                                    readOnly={readOnly || !hasName}
-                                    disabled={readOnly || !hasName}
-                                    placeholder={readOnly ? "" : `Enter ${sublabel} name…`}
-                                    className={cn(
-                                        "text-sm",
-                                        (readOnly || !hasName) && "bg-muted/40",
+                                <div className="flex items-center gap-2 h-9">
+                                    {hasEmpNo && (
+                                        <span className="shrink-0 font-mono text-xs text-muted-foreground bg-muted/60 border rounded px-1.5 py-1">
+                                            #{approval.approver_emp_no}
+                                        </span>
                                     )}
-                                />
+                                    {hasName ? (
+                                        <Input
+                                            value={approval.approver_name}
+                                            readOnly
+                                            disabled
+                                            className="text-sm flex-1 bg-muted/40"
+                                        />
+                                    ) : (
+                                        <Badge variant="outline" className="text-muted-foreground">
+                                            Pending
+                                        </Badge>
+                                    )}
+                                </div>
                                 <p className="text-[11px] text-left text-muted-foreground mt-1.5">
                                     {sublabel}
                                 </p>
@@ -51,21 +60,16 @@ export function ApprovalSection({ approvals, updateApproval }) {
                                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
                                     Date
                                 </p>
-                                {readOnly ? (
+                                {hasDate ? (
                                     <Input
                                         readOnly
-                                        value={format(new Date(), "MMM d, yyyy")}
+                                        value={format(new Date(approval.sign_date), "MMM d, yyyy")}
                                         className="h-9 w-full text-sm bg-muted/40"
                                     />
                                 ) : (
-                                    <DatePicker
-                                        value={approval?.sign_date ?? ""}
-                                        onChange={(v) => updateApproval(idx, "sign_date", v ?? "")}
-                                        placeholder="Pick date…"
-                                        className="h-9 w-full"
-                                        disabled={!hasName}
-                                        clearable={false}
-                                    />
+                                    <Badge variant="outline" className="text-muted-foreground">
+                                        Pending
+                                    </Badge>
                                 )}
                             </div>
                         </div>

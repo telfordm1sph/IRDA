@@ -86,18 +86,21 @@ class IrConstants
 
     // ── Display Status list for frontend filter dropdown ─────────────────────
     const IR_DISPLAY_STATUSES = [
+        // IR Phase
         'Pending',
         'Disapproved',
         'Letter of Explanation',
         'For Assessment',
         'For Validation',
         'IR: For Dept Approval',
+        // DA Phase
         'For DA',
         'For HR Manager',
         'DA: For Supervisor',
         'DA: For Dept Manager',
         'For Acknowledgement',
         'Acknowledged',
+        // Closed
         'Invalid',
         'Cancelled',
         'Inactive',
@@ -131,6 +134,18 @@ class IrConstants
      * @param  object|null  $da          ir_da_requests row (if exists)
      * @param  bool    $hasLoe      whether ir_reasons has a row for this ir_no
      */
+    /**
+     * Compute the human-readable status label.
+     *
+     * IR Phase order (matches legacy searchResult.php logic):
+     *   Pending → HR validates → Letter of Explanation → For Assessment (SV)
+     *   → For Validation (HR re-validates, tracked by hr approval da_sign_date)
+     *   → IR: For Dept Approval (DH signs off → sets ir_status=2)
+     *
+     * DA Phase:
+     *   For DA → For HR Manager → DA: For Supervisor → DA: For Dept Manager
+     *   → For Acknowledgement (employee) → Acknowledged
+     */
     public static function resolveDisplayStatus(
         object $ir,
         ?object $hrApproval,
@@ -143,23 +158,31 @@ class IrConstants
 
         switch ($ir->ir_status) {
             case self::IR_PENDING:
-                if ($hrApproval?->status === self::APPROVAL_DISAPPROVED)
-                    return 'Disapproved';
+                if ($hrApproval?->status === self::APPROVAL_DISAPPROVED) return 'Disapproved';
                 return 'Pending';
 
             case self::IR_VALIDATED:
-                if (!$hasLoe)                                          return 'Letter of Explanation';
-                if ($svApproval?->status === self::APPROVAL_PENDING)   return 'For Assessment';
-                if ($hrApproval?->status === self::APPROVAL_PENDING)   return 'For Validation';
-                if ($dhApproval?->status === self::APPROVAL_PENDING)   return 'IR: For Dept Approval';
+                if (!$hasLoe) return 'Letter of Explanation';
+
+                // SV hasn't assessed yet
+                if (!$svApproval || $svApproval->status === self::APPROVAL_PENDING) return 'For Assessment';
+
+                // SV done — HR needs to re-validate (da_sign_date marks re-validation, not initial validation)
+                if (!$hrApproval?->da_sign_date) return 'For Validation';
+
+                // HR re-validated — DH needs to sign off the IR
+                if (!$dhApproval || $dhApproval->status === self::APPROVAL_PENDING) return 'IR: For Dept Approval';
+
                 return 'In Progress';
 
             case self::IR_APPROVED:
                 if (!$da) return 'For DA';
                 return self::daStatusLabel($da->da_status);
 
-            case self::IR_INVALID:   return 'Invalid';
-            case self::IR_CANCELLED: return 'Cancelled';
+            case self::IR_INVALID:
+                return 'Invalid';
+            case self::IR_CANCELLED:
+                return 'Cancelled';
         }
 
         return '—';

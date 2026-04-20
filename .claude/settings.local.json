@@ -4,7 +4,8 @@
       "Bash(find /c/Users/telford.programmer/Desktop/IRDA/database/migrations -type f -name \"*.php\" -exec basename {} \\\\;)",
       "Bash(npm install *)",
       "Bash(pdftotext:*)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(xargs grep:*)"
     ]
   }
 }

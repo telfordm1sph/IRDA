@@ -19,7 +19,9 @@ export default function CreateIR() {
 
     const {
         data, setData, errors, processing,
-        addItem, removeItem, updateItem, updateApproval, submit,
+        addItem, removeItem, updateItem,
+        addDate, removeDate, updateDate,
+        updateApproval, submit,
     } = useIrForm();
 
     const { loadEmployees, selectedEmp, selectedWorkDetails, setEmpMap } = useEmployee(data.emp_no);
@@ -90,6 +92,9 @@ export default function CreateIR() {
                     updateItem={(idx, field, value) => updateItem(idx, field, value, codeNumbers)}
                     addItem={addItem}
                     removeItem={removeItem}
+                    addDate={addDate}
+                    removeDate={removeDate}
+                    updateDate={updateDate}
                     loadCodeOptions={loadCodeOptions}
                     openModal={openModal}
                 />

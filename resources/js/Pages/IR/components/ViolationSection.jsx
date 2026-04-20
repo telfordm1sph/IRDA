@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { SectionCard, FieldError } from "./IrShared";
 import { DA_TYPES } from "./IrConstants";
 
-export function ViolationSection({ data, setData, errors, updateItem, addItem, removeItem, loadCodeOptions, openModal }) {
+export function ViolationSection({ data, setData, errors, updateItem, addItem, removeItem, addDate, removeDate, updateDate, loadCodeOptions, openModal }) {
     return (
         <SectionCard icon={AlertCircle} title="Violation Details">
             <div className="space-y-5">
@@ -97,7 +97,7 @@ export function ViolationSection({ data, setData, errors, updateItem, addItem, r
                                             ["Code No.", "w-36"],
                                             ["Violation / Nature of Offense", ""],
                                             ["D.A.", "w-44"],
-                                            ["Date Committed", "w-40"],
+                                            ["Date(s) Committed", "w-48"],
                                             ["No. of Offense", "w-28"],
                                             ["", "w-10"],
                                         ].map(([h, w], i) => (
@@ -164,13 +164,39 @@ export function ViolationSection({ data, setData, errors, updateItem, addItem, r
                                                 />
                                             </td>
                                             <td className="px-2 py-2">
-                                                <DatePicker
-                                                    value={item.date_committed}
-                                                    onChange={(v) => updateItem(idx, "date_committed", v ?? "")}
-                                                    placeholder="Pick date…"
-                                                    clearable={false}
-                                                    className="h-8 w-full"
-                                                />
+                                                <div className="space-y-1">
+                                                    {(item.date_committed?.length ? item.date_committed : [""]).map((d, di) => (
+                                                        <div key={di} className="flex gap-1 items-center">
+                                                            <DatePicker
+                                                                value={d}
+                                                                onChange={(v) => updateDate(idx, di, v ?? "")}
+                                                                placeholder="Pick date…"
+                                                                clearable={false}
+                                                                className="h-7 flex-1 text-xs"
+                                                            />
+                                                            {item.date_committed.length > 1 && (
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                                    onClick={() => removeDate(idx, di)}
+                                                                >
+                                                                    <Trash2 className="w-3 h-3" />
+                                                                </Button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-6 text-xs gap-1 px-1 text-muted-foreground hover:text-foreground"
+                                                        onClick={() => addDate(idx)}
+                                                    >
+                                                        <Plus className="w-3 h-3" /> Add date
+                                                    </Button>
+                                                </div>
                                             </td>
                                             <td className="px-2 py-2">
                                                 <Input

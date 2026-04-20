@@ -7,9 +7,9 @@ export const DA_TYPES = [
 ];
 
 export const EMPTY_ITEM = {
-    code_no: "",
-    violation: "",
-    da_type: "",
-    date_committed: "",
-    offense_no: "",
+    code_no:        "",
+    violation:      "",
+    da_type:        "",
+    date_committed: [""],   // array — one row per date on submit
+    offense_no:     "",
 };

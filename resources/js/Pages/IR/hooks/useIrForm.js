@@ -49,6 +49,25 @@ export function useIrForm() {
         );
     };
 
+    // ── Per-item date helpers (date_committed is an array) ────────────────────
+    const addDate = (itemIdx) =>
+        setData("items", data.items.map((item, idx) =>
+            idx !== itemIdx ? item
+                : { ...item, date_committed: [...(item.date_committed ?? [""]), ""] }
+        ));
+
+    const removeDate = (itemIdx, dateIdx) =>
+        setData("items", data.items.map((item, idx) =>
+            idx !== itemIdx ? item
+                : { ...item, date_committed: item.date_committed.filter((_, di) => di !== dateIdx) }
+        ));
+
+    const updateDate = (itemIdx, dateIdx, value) =>
+        setData("items", data.items.map((item, idx) =>
+            idx !== itemIdx ? item
+                : { ...item, date_committed: item.date_committed.map((d, di) => di === dateIdx ? value : d) }
+        ));
+
     // ── Approvals ────────────────────────────────────────────────────────────
     const updateApproval = (i, field, value) =>
         setData(
@@ -77,6 +96,9 @@ export function useIrForm() {
         addItem,
         removeItem,
         updateItem,
+        addDate,
+        removeDate,
+        updateDate,
         updateApproval,
         submit,
     };

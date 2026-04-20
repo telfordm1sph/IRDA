@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\IrAdmin;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -31,7 +32,10 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            'emp_data' => fn() => session('emp_data'),
+            'emp_data'      => fn() => session('emp_data'),
+            'ir_admin_role' => fn() => ($empNo = (int) session('emp_data.emp_id'))
+                ? IrAdmin::roleFor($empNo)
+                : null,
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
                 'error'   => fn() => $request->session()->get('error'),

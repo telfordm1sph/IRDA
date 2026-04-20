@@ -12,7 +12,6 @@ class IrApproval extends Model
         'ir_no',
         'role',
         'approver_emp_no',
-        'approver_name',
         'status',
         'sign_date',
         'da_sign_date',

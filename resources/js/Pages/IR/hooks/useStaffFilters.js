@@ -8,27 +8,27 @@ const DEFAULTS = {
     start:   "",
     end:     "",
     perPage: 15,
+    empId:   "",
 };
 
-// One store for the ir.index route — created once at module level.
-const useStore = createFilterStore("ir.index", ["irList", "filters"], DEFAULTS);
+// One store for the ir.staff route — created once at module level.
+const useStore = createFilterStore("ir.staff", ["irList", "filters"], DEFAULTS);
 
 /**
- * Filter state for IndexIR (My Incident Reports).
+ * Filter state for StaffIR (Supervisor / manager view of direct-report IRs).
  * Hydrates from server-provided initialFilters on every navigation.
  */
-export function useIrFilters(initialFilters = {}) {
+export function useStaffFilters(initialFilters = {}) {
     const { filters, hydrate, apply, goToPage } = useStore();
 
-    // Sync with whatever the server sent (handles browser back/forward too).
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { hydrate(initialFilters); }, [JSON.stringify(initialFilters)]);
 
     return {
         filters,
-        applyFilters:  apply,
-        clearFilters:  () => apply({ search: "", status: "", start: "", end: "" }),
-        switchTab:     (tab) => apply({ tab, status: "", search: "" }),
+        applyFilters: apply,
+        clearFilters: () => apply({ search: "", status: "", start: "", end: "", empId: "" }),
+        switchTab:    (tab) => apply({ tab, status: "", search: "", empId: "" }),
         goToPage,
     };
 }

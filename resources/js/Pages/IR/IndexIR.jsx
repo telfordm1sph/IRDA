@@ -7,71 +7,16 @@ import { Badge } from "@/Components/ui/badge";
 import { format } from "date-fns";
 import { useRef } from "react";
 
+import { Pagination }    from "@/Components/Pagination";
+import { CodesCell }     from "@/Components/CodesCell";
 import { useIrFilters }  from "./hooks/useIrFilters";
 import { IrStatusBadge } from "./components/IrStatusBadge";
-import { DA_TYPES }      from "./components/IrConstants";
-
-// ── Pagination ────────────────────────────────────────────────────────────────
-
-function Pagination({ meta, onPageChange }) {
-    if (!meta || meta.last_page <= 1) return null;
-    const { current_page, last_page, from, to, total } = meta;
-    return (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 mt-4">
-            <p className="text-xs text-muted-foreground">
-                Showing {from ?? 0}–{to ?? 0} of {total ?? 0}
-            </p>
-            <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" disabled={current_page === 1}
-                    onClick={() => onPageChange(current_page - 1)} className="h-8 px-3 text-xs">
-                    Previous
-                </Button>
-                <span className="text-xs text-muted-foreground px-2">{current_page} / {last_page}</span>
-                <Button variant="outline" size="sm" disabled={current_page === last_page}
-                    onClick={() => onPageChange(current_page + 1)} className="h-8 px-3 text-xs">
-                    Next
-                </Button>
-            </div>
-        </div>
-    );
-}
-
-// ── Codes cell ────────────────────────────────────────────────────────────────
-
-function CodesCell({ codes }) {
-    if (!codes?.length) return <span className="text-muted-foreground text-xs">—</span>;
-    return (
-        <div className="space-y-1">
-            {codes.map((c, i) => (
-                <div key={i} className="text-xs">
-                    <span className="font-medium font-mono">{c.code_no}</span>
-                    {c.violation && (
-                        <span className="text-muted-foreground ml-1">— {c.violation}</span>
-                    )}
-                </div>
-            ))}
-        </div>
-    );
-}
-
-// ── Main ──────────────────────────────────────────────────────────────────────
 
 export default function IndexIR({ irList, filters: initialFilters, statusOptions }) {
-    const { filters, applyFilters, clearFilters } = useIrFilters(initialFilters);
-    const searchRef = useRef(null);
-    const hasActiveFilters = filters.search || filters.status || filters.start || filters.end || filters.empId;
-    const activeTab = filters.tab ?? "active";
-
-    const isSupervisor   = irList?.is_supervisor   ?? false;
-    const directReports  = irList?.direct_reports  ?? [];
-
-    const switchTab = (tab) => applyFilters({ tab, status: "", search: "", empId: "" });
-
-    const goToPage = (page) => {
-        router.get(route("ir.index"), { ...filters, page }, {
-            preserveState: true, preserveScroll: true, only: ["irList", "filters"],
-        });
-    };
+    const { filters, applyFilters, clearFilters, switchTab, goToPage } = useIrFilters(initialFilters);
+    const searchRef       = useRef(null);
+    const hasActiveFilters = filters.search || filters.status || filters.start || filters.end;
+    const activeTab        = filters.tab ?? "active";
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -80,16 +25,16 @@ export default function IndexIR({ irList, filters: initialFilters, statusOptions
 
     return (
         <AuthenticatedLayout>
-            <Head title="Incident Reports" />
+            <Head title="My Incident Reports" />
 
-            {/* Page header */}
+            {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
                 <div className="flex items-start gap-3">
                     <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10 shrink-0 mt-0.5">
                         <FileWarning className="w-4.5 h-4.5 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight">Incident Reports</h1>
+                        <h1 className="text-xl font-bold tracking-tight">My Incident Reports</h1>
                         <p className="text-sm text-muted-foreground mt-0.5">
                             {irList?.total ?? 0} record{irList?.total !== 1 ? "s" : ""}
                         </p>
@@ -100,21 +45,18 @@ export default function IndexIR({ irList, filters: initialFilters, statusOptions
                 </Button>
             </div>
 
-            {/* Tabs — Active / History */}
+            {/* Tabs */}
             <div className="flex gap-1 border-b mb-4">
                 {[
-                    { key: "active",  label: "Active" },
+                    { key: "active",  label: "Active"  },
                     { key: "history", label: "History" },
                 ].map(({ key, label }) => (
-                    <button
-                        key={key}
-                        onClick={() => switchTab(key)}
+                    <button key={key} onClick={() => switchTab(key)}
                         className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                             activeTab === key
                                 ? "border-primary text-primary"
                                 : "border-transparent text-muted-foreground hover:text-foreground"
-                        }`}
-                    >
+                        }`}>
                         {label}
                     </button>
                 ))}
@@ -136,19 +78,6 @@ export default function IndexIR({ irList, filters: initialFilters, statusOptions
                 </form>
 
                 <div className="flex gap-2 items-center flex-wrap">
-                    {isSupervisor && directReports.length > 0 && (
-                        <select
-                            value={filters.empId}
-                            onChange={(e) => applyFilters({ empId: e.target.value })}
-                            className="h-9 px-3 text-sm border border-input bg-background rounded-md appearance-none focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer min-w-[180px]"
-                        >
-                            <option value="">All Employees</option>
-                            {directReports.map((dr) => (
-                                <option key={dr.emp_id} value={dr.emp_id}>{dr.emp_name}</option>
-                            ))}
-                        </select>
-                    )}
-
                     <div className="relative">
                         <SlidersHorizontal className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
                         <select
@@ -216,19 +145,13 @@ export default function IndexIR({ irList, filters: initialFilters, statusOptions
                             ) : (
                                 (irList?.data ?? []).map((ir) => (
                                     <tr key={ir.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                                        <td className="px-4 py-3 font-mono text-xs font-semibold whitespace-nowrap">
-                                            {ir.ir_no}
-                                        </td>
+                                        <td className="px-4 py-3 font-mono text-xs font-semibold whitespace-nowrap">{ir.ir_no}</td>
                                         <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
-                                            {ir.date_created
-                                                ? format(new Date(ir.date_created), "MM-dd-yyyy")
-                                                : "—"}
+                                            {ir.date_created ? format(new Date(ir.date_created), "MM-dd-yyyy") : "—"}
                                         </td>
                                         <td className="px-4 py-3">
                                             <div className="text-sm font-medium leading-tight">{ir.emp_name ?? ir.emp_no}</div>
-                                            {ir.emp_name && (
-                                                <div className="text-xs text-muted-foreground">#{ir.emp_no}</div>
-                                            )}
+                                            {ir.emp_name && <div className="text-xs text-muted-foreground">#{ir.emp_no}</div>}
                                         </td>
                                         <td className="px-4 py-3 max-w-[220px]">
                                             <CodesCell codes={ir.codes} />
@@ -240,11 +163,8 @@ export default function IndexIR({ irList, filters: initialFilters, statusOptions
                                             <IrStatusBadge status={ir.display_status} />
                                         </td>
                                         <td className="px-4 py-3">
-                                            <Button
-                                                variant="outline" size="sm"
-                                                className="h-7 text-xs"
-                                                onClick={() => {/* wire to view route */}}
-                                            >
+                                            <Button variant="outline" size="sm" className="h-7 text-xs"
+                                                onClick={() => router.get(route("ir.show", btoa(ir.id)))}>
                                                 View
                                             </Button>
                                         </td>
