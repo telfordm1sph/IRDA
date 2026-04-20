@@ -1,7 +1,7 @@
 import { usePage } from "@inertiajs/react";
 import SidebarLink from "@/Components/sidebar/SidebarLink";
 import Dropdown from "@/Components/sidebar/DropDown";
-import { FileWarning, LayoutDashboard } from "lucide-react";
+import { FileWarning, LayoutDashboard, Settings2 } from "lucide-react";
 
 const ADMIN_LABELS = {
     hr:      "HR Action Items",
@@ -24,6 +24,11 @@ export default function NavLinks({ isSidebarOpen }) {
         });
     }
 
+    const maintenanceLinks = ir_admin_role === "hr" ? [
+        { href: route("ir.maintenance.admins"), label: "IR Admins" },
+        { href: route("ir.maintenance.codes"),  label: "Code Numbers" },
+    ] : null;
+
     return (
         <nav
             className="flex flex-col flex-grow space-y-1 overflow-y-auto"
@@ -41,6 +46,14 @@ export default function NavLinks({ isSidebarOpen }) {
                 isSidebarOpen={isSidebarOpen}
                 links={irLinks}
             />
+            {maintenanceLinks && (
+                <Dropdown
+                    label="IR Maintenance"
+                    icon={<Settings2 className="w-5 h-5" />}
+                    isSidebarOpen={isSidebarOpen}
+                    links={maintenanceLinks}
+                />
+            )}
         </nav>
     );
 }

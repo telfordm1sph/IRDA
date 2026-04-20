@@ -86,7 +86,7 @@ class IrRequestRepository
         $query = IrRequest::with([
             'approvals',
             'daRequest',
-            'irList' => fn ($q) => $q->where('valid', 1)->select('ir_no', 'code_no', 'violation', 'da_type', 'offense_no'),
+            'irList' => fn ($q) => $q->select('ir_no', 'code_no', 'violation', 'da_type', 'offense_no'),
             'reasons' => fn ($q) => $q->limit(1),
         ]);
 
@@ -253,7 +253,7 @@ class IrRequestRepository
         $query = IrRequest::with([
             'approvals',
             'daRequest',
-            'irList' => fn ($q) => $q->where('valid', 1)->select('ir_no', 'code_no', 'violation', 'da_type', 'offense_no'),
+            'irList' => fn ($q) => $q->select('ir_no', 'code_no', 'violation', 'da_type', 'offense_no'),
             'reasons' => fn ($q) => $q->limit(1),
         ]);
 
@@ -304,6 +304,19 @@ class IrRequestRepository
                 ->orWhereHas('irList', fn ($l) => $l->where('code_no', 'like', "%{$s}%")
                     ->orWhere('violation', 'like', "%{$s}%"))
             );
+        }
+
+        // Status filter works on both tabs
+        if ($tab === 'action' && !empty($filters['status'])) {
+            $query = $this->applyStatusFilter($query, $filters['status']);
+        }
+
+        // Date range filter
+        if (!empty($filters['start']) && !empty($filters['end'])) {
+            $query->whereBetween('date_created', [
+                $filters['start'] . ' 00:00:00',
+                $filters['end']   . ' 23:59:59',
+            ]);
         }
 
         return $query

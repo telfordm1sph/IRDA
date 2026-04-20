@@ -6,6 +6,8 @@ const DEFAULTS = {
     status:  "",
     tab:     "action",
     perPage: 15,
+    start:   "",
+    end:     "",
 };
 
 // One store for the ir.admin route — created once at module level.
@@ -24,8 +26,8 @@ export function useAdminFilters(initialFilters = {}) {
     return {
         filters,
         applyFilters: apply,
-        clearFilters: () => apply({ search: "", status: "" }),
-        switchTab:    (tab) => apply({ tab, status: "", search: "" }),
+        clearFilters: () => apply({ search: "", status: "", start: "", end: "" }),
+        switchTab:    (tab) => apply({ tab, status: "", search: "", start: "", end: "" }),
         goToPage,
     };
 }

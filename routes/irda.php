@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\IrController;
+use App\Http\Controllers\IrMaintenanceController;
 use App\Http\Middleware\AuthMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,22 @@ Route::prefix($app_name)->middleware(AuthMiddleware::class)->group(function () {
     Route::post("/ir/{hash}/da/sv-ack",      [IrController::class, 'svAcknowledge'])->name('ir.da.svAck');
     Route::post("/ir/{hash}/da/dm-ack",      [IrController::class, 'dmAcknowledge'])->name('ir.da.dmAck');
     Route::post("/ir/{hash}/da/acknowledge", [IrController::class, 'employeeAcknowledge'])->name('ir.da.acknowledge');
+    // ── Maintenance (HR only) ──────────────────────────────────────────────────
+    Route::prefix('/ir/maintenance')->name('ir.maintenance.')->group(function () {
+        // IR Admin management
+        Route::get('/admins',                   [IrMaintenanceController::class, 'admins'])->name('admins');
+        Route::post('/admins',                  [IrMaintenanceController::class, 'adminStore'])->name('admins.store');
+        Route::put('/admins/{id}',              [IrMaintenanceController::class, 'adminUpdate'])->name('admins.update');
+        Route::post('/admins/{id}/toggle',      [IrMaintenanceController::class, 'adminToggle'])->name('admins.toggle');
+        Route::delete('/admins/{id}',           [IrMaintenanceController::class, 'adminDelete'])->name('admins.delete');
+
+        // Code number management
+        Route::get('/codes',                    [IrMaintenanceController::class, 'codes'])->name('codes');
+        Route::post('/codes',                   [IrMaintenanceController::class, 'codeStore'])->name('codes.store');
+        Route::put('/codes/{id}',               [IrMaintenanceController::class, 'codeUpdate'])->name('codes.update');
+        Route::post('/codes/{id}/toggle',       [IrMaintenanceController::class, 'codeToggle'])->name('codes.toggle');
+    });
+
     // Must be last — catch-all hash segment
     Route::get("/ir/{hash}", [IrController::class, 'show'])->name('ir.show');
 });

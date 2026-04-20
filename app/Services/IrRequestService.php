@@ -275,9 +275,11 @@ class IrRequestService
         $tab = in_array($request->input('tab'), ['action', 'all']) ? $request->input('tab') : 'action';
         $filters = [
             'search'  => trim($request->input('search', '')),
-            'status'  => $tab === 'all' ? trim($request->input('status', '')) : '',
+            'status'  => trim($request->input('status', '')),
             'tab'     => $tab,
             'perPage' => min(100, max(10, (int) $request->input('perPage', 15))),
+            'start'   => $request->input('start', ''),
+            'end'     => $request->input('end', ''),
         ];
 
         $paginator = $this->repo->listAdminPaginated($adminRole, $filters);

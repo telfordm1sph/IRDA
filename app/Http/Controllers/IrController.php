@@ -372,7 +372,7 @@ class IrController extends Controller
 
         return Inertia::render('IR/AdminIR', [
             'irList'        => fn() => $this->service->getAdminIrList($request, $adminRole),
-            'filters'       => $request->only(['search', 'status', 'tab', 'perPage']),
+            'filters'       => $request->only(['search', 'status', 'tab', 'perPage', 'start', 'end']),
             'adminRole'     => $adminRole,
             'statusOptions' => IrConstants::IR_DISPLAY_STATUSES,
         ]);
