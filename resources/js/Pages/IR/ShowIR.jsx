@@ -57,7 +57,9 @@ export function TextBlock({ label, value }) {
             </p>
             <div className="rounded-lg border bg-muted/40 px-3 py-2 text-sm min-h-[56px] whitespace-pre-wrap text-foreground">
                 {value || (
-                    <span className="text-muted-foreground">No data available</span>
+                    <span className="text-muted-foreground">
+                        No data available
+                    </span>
                 )}
             </div>
         </div>
@@ -77,7 +79,12 @@ export function SignatureBlock({ role, name, date, actionLabel = "Signed" }) {
             )}
         >
             {/* top accent bar */}
-            <div className={cn("h-1 w-full shrink-0", signed ? "bg-green-500" : "bg-border/60")} />
+            <div
+                className={cn(
+                    "h-1 w-full shrink-0",
+                    signed ? "bg-green-500" : "bg-border/60",
+                )}
+            />
 
             <div className="p-3 flex flex-col gap-2 flex-1">
                 {/* role label (2-line max) + status pill */}
@@ -94,9 +101,14 @@ export function SignatureBlock({ role, name, date, actionLabel = "Signed" }) {
                         )}
                     >
                         {signed ? (
-                            <><CheckCircle2 className="w-2.5 h-2.5" /> {actionLabel}</>
+                            <>
+                                <CheckCircle2 className="w-2.5 h-2.5" />{" "}
+                                {actionLabel}
+                            </>
                         ) : (
-                            <><Clock3 className="w-2.5 h-2.5" /> Pending</>
+                            <>
+                                <Clock3 className="w-2.5 h-2.5" /> Pending
+                            </>
                         )}
                     </span>
                 </div>
@@ -108,7 +120,9 @@ export function SignatureBlock({ role, name, date, actionLabel = "Signed" }) {
                             {name}
                         </p>
                     ) : (
-                        <span className="text-sm text-muted-foreground italic">—</span>
+                        <span className="text-sm text-muted-foreground italic">
+                            —
+                        </span>
                     )}
                 </div>
 
@@ -129,7 +143,9 @@ export function ActionPanel({ title, children }) {
             <CardHeader className="space-y-1">
                 <div className="flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-primary" />
-                    <CardTitle className="text-base text-primary">{title}</CardTitle>
+                    <CardTitle className="text-base text-primary">
+                        {title}
+                    </CardTitle>
                 </div>
             </CardHeader>
             <CardContent className="space-y-4">{children}</CardContent>
@@ -187,7 +203,9 @@ function FlashBanner() {
             ) : (
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             )}
-            <p className="text-sm font-medium">{flash.success ?? flash.error}</p>
+            <p className="text-sm font-medium">
+                {flash.success ?? flash.error}
+            </p>
         </div>
     );
 }
@@ -220,7 +238,9 @@ export default function ShowIR({
     const isIrOnly = ir.company_id === 5;
     const inDaPhase = !isIrOnly && ir.ir_status === 2 && !!ir.da_request;
     const daAcknowledged = !!ir.da_request?.acknowledge_da;
-    const byRole = Object.fromEntries((ir.approvals ?? []).map((a) => [a.role, a]));
+    const byRole = Object.fromEntries(
+        (ir.approvals ?? []).map((a) => [a.role, a]),
+    );
     const hrApproval = byRole["hr"];
     const svApproval = byRole["sv"];
     const dhApproval = byRole["dh"];
@@ -286,21 +306,25 @@ export default function ShowIR({
                     </div>
                 </div>
                 <div className="flex gap-2 self-start sm:self-auto">
-                    {inDaPhase && daAcknowledged && currentUserRole === "hr" && (
-                        <Button
-                            size="sm"
-                            className="gap-1.5"
-                            onClick={() => window.print()}
-                        >
-                            <Printer className="w-3.5 h-3.5" /> Print DA
-                        </Button>
-                    )}
+                    {inDaPhase &&
+                        daAcknowledged &&
+                        currentUserRole === "hr" && (
+                            <Button
+                                size="sm"
+                                className="gap-1.5"
+                                onClick={() => window.print()}
+                            >
+                                <Printer className="w-3.5 h-3.5" /> Print DA
+                            </Button>
+                        )}
                     {inDaPhase && (
                         <Button
                             size="sm"
                             variant="outline"
                             className="gap-1.5"
-                            onClick={() => router.get(route("ir.show.da", hash))}
+                            onClick={() =>
+                                router.get(route("ir.show.da", hash))
+                            }
                         >
                             <FileCheck className="w-3.5 h-3.5" /> View DA
                         </Button>
@@ -325,17 +349,21 @@ export default function ShowIR({
                                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                                 <div>
                                     <p className="text-sm font-semibold text-amber-900 dark:text-amber-300">
-                                        Action required on the Disciplinary Action
+                                        Action required on the Disciplinary
+                                        Action
                                     </p>
                                     <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
-                                        Review the DA form and complete your acknowledgement there.
+                                        Review the DA form and complete your
+                                        acknowledgement there.
                                     </p>
                                 </div>
                             </div>
                             <Button
                                 size="sm"
                                 className="gap-1.5 shrink-0 bg-amber-600 hover:bg-amber-700 text-white"
-                                onClick={() => router.get(route("ir.show.da", hash))}
+                                onClick={() =>
+                                    router.get(route("ir.show.da", hash))
+                                }
                             >
                                 Open DA <ArrowRight className="w-3.5 h-3.5" />
                             </Button>
@@ -350,16 +378,20 @@ export default function ShowIR({
                             <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
                             <div>
                                 <p className="text-sm font-semibold text-green-900 dark:text-green-300">
-                                    IR Approved — No Disciplinary Action Required
+                                    IR Approved — No Disciplinary Action
+                                    Required
                                 </p>
                                 <p className="text-xs text-green-700 dark:text-green-400 mt-0.5">
                                     This employee belongs to{" "}
                                     {ir.company ? (
-                                        <span className="font-medium">{ir.company}</span>
+                                        <span className="font-medium">
+                                            {ir.company}
+                                        </span>
                                     ) : (
                                         "a company"
                                     )}{" "}
-                                    whose IR process ends at approval. No DA will be issued.
+                                    whose IR process ends at approval. No DA
+                                    will be issued.
                                 </p>
                             </div>
                         </CardContent>
@@ -369,12 +401,17 @@ export default function ShowIR({
                 {/* I. Employee Details */}
                 <SectionCard icon={User} title="I. Details of Person Involved">
                     <div className="grid grid-cols-3 gap-x-6 gap-y-4">
-                        <ReadField label="Employee No." value={ir.emp_no} mono />
+                        <ReadField
+                            label="Employee No."
+                            value={ir.emp_no}
+                            mono
+                        />
                         <ReadField
                             label="Shift / Team"
                             value={
-                                [ir.shift, ir.team].filter(Boolean).join(" / ") ||
-                                null
+                                [ir.shift, ir.team]
+                                    .filter(Boolean)
+                                    .join(" / ") || null
                             }
                         />
                         <ReadField label="Employee Name" value={ir.emp_name} />
@@ -390,8 +427,8 @@ export default function ShowIR({
                     <div className="flex flex-col sm:flex-row gap-4 items-start">
                         <div className="flex gap-4">
                             {[
-                                { value: 0, label: "Administrative" },
-                                { value: 1, label: "Quality" },
+                                { value: 1, label: "Administrative" },
+                                { value: 2, label: "Quality" },
                             ].map(({ value, label }) => (
                                 <label
                                     key={value}
@@ -413,7 +450,9 @@ export default function ShowIR({
                                 <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                                     Reference (IPNR / QDN / EQS)
                                 </p>
-                                <p className="text-sm font-medium">{ir.reference}</p>
+                                <p className="text-sm font-medium">
+                                    {ir.reference}
+                                </p>
                             </div>
                         )}
                     </div>
@@ -436,7 +475,10 @@ export default function ShowIR({
                                 value={ir.where_loc}
                             />
                         </div>
-                        <TextBlock label="How / Other information" value={ir.how} />
+                        <TextBlock
+                            label="How / Other information"
+                            value={ir.how}
+                        />
                     </div>
                 </SectionCard>
 
@@ -465,7 +507,10 @@ export default function ShowIR({
                                 </thead>
                                 <tbody>
                                     {(ir.violations ?? []).map((v, i) => (
-                                        <tr key={i} className="border-b last:border-0">
+                                        <tr
+                                            key={i}
+                                            className="border-b last:border-0"
+                                        >
                                             <td className="px-4 py-3 font-mono text-xs font-semibold">
                                                 {v.code_no}
                                             </td>
@@ -473,10 +518,14 @@ export default function ShowIR({
                                                 {v.violation}
                                             </td>
                                             <td className="px-4 py-3 whitespace-nowrap">
-                                                <OffenseBadge value={v.da_type} />
+                                                <OffenseBadge
+                                                    value={v.da_type}
+                                                />
                                             </td>
                                             <td className="px-4 py-3 text-xs text-muted-foreground">
-                                                {formatMultiDates(v.date_committed)}
+                                                {formatMultiDates(
+                                                    v.date_committed,
+                                                )}
                                             </td>
                                             <td className="px-4 py-3 text-center">
                                                 {v.offense_no ? (
@@ -599,14 +648,15 @@ export default function ShowIR({
                         </div>
                         {hrApproval?.da_sign_date && (
                             <p className="mt-4 text-xs text-muted-foreground">
-                                HR re-validated on {safeFormatDT(hrApproval.da_sign_date)}
+                                HR re-validated on{" "}
+                                {safeFormatDT(hrApproval.da_sign_date)}
                             </p>
                         )}
                     </SectionCard>
                 </LazySection>
 
                 {/* VIII. Action Required — IR-phase only ───────────────────── */}
-                {(hasIrAction) && (
+                {hasIrAction && (
                     <LazySection>
                         <SectionCard
                             icon={AlertCircle}
@@ -616,9 +666,9 @@ export default function ShowIR({
                             {hrCanValidate && (
                                 <ActionPanel title="Validate Incident Report">
                                     <p className="text-sm text-muted-foreground">
-                                        Review the IR and mark it as Valid or Invalid.
-                                        Invalid IRs are returned to the requestor for
-                                        correction.
+                                        Review the IR and mark it as Valid or
+                                        Invalid. Invalid IRs are returned to the
+                                        requestor for correction.
                                     </p>
                                     <div className="flex gap-6">
                                         {[
@@ -631,7 +681,9 @@ export default function ShowIR({
                                             >
                                                 <input
                                                     type="radio"
-                                                    checked={validateApproved === v}
+                                                    checked={
+                                                        validateApproved === v
+                                                    }
                                                     onChange={() =>
                                                         setValidateApproved(v)
                                                     }
@@ -647,7 +699,9 @@ export default function ShowIR({
                                         <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
                                             Remarks{" "}
                                             {!validateApproved && (
-                                                <span className="text-red-500">*</span>
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
                                             )}
                                         </p>
                                         <Textarea
@@ -659,7 +713,9 @@ export default function ShowIR({
                                             }
                                             value={validateRemarks}
                                             onChange={(e) =>
-                                                setValidateRemarks(e.target.value)
+                                                setValidateRemarks(
+                                                    e.target.value,
+                                                )
                                             }
                                             className="text-sm"
                                         />
@@ -693,20 +749,24 @@ export default function ShowIR({
                                         HR has marked this IR as invalid.
                                         {hrApproval?.remarks && (
                                             <span className="block mt-1 italic text-amber-700">
-                                                HR remarks: "{hrApproval.remarks}"
+                                                HR remarks: "
+                                                {hrApproval.remarks}"
                                             </span>
                                         )}
-                                        Please review and correct the IR then resubmit.
+                                        Please review and correct the IR then
+                                        resubmit.
                                     </p>
                                     <div className="flex justify-end">
                                         <Button
                                             className="gap-1.5"
                                             onClick={() =>
-                                                router.get(route("ir.edit", hash))
+                                                router.get(
+                                                    route("ir.edit", hash),
+                                                )
                                             }
                                         >
-                                            <Pencil className="w-3.5 h-3.5" /> Edit &
-                                            Resubmit
+                                            <Pencil className="w-3.5 h-3.5" />{" "}
+                                            Edit & Resubmit
                                         </Button>
                                     </div>
                                 </ActionPanel>
@@ -716,8 +776,8 @@ export default function ShowIR({
                             {empCanSubmitLoe && (
                                 <ActionPanel title="Submit Letter of Explanation">
                                     <p className="text-sm text-muted-foreground">
-                                        Explain your side for each point. Provide exactly
-                                        5 reasons.
+                                        Explain your side for each point.
+                                        Provide exactly 5 reasons.
                                     </p>
                                     <div className="space-y-3">
                                         {loeReasons.map((reason, i) => (
@@ -731,10 +791,13 @@ export default function ShowIR({
                                                     value={reason}
                                                     onChange={(e) =>
                                                         setLoeReasons((prev) =>
-                                                            prev.map((r, idx) =>
-                                                                idx === i
-                                                                    ? e.target.value
-                                                                    : r,
+                                                            prev.map(
+                                                                (r, idx) =>
+                                                                    idx === i
+                                                                        ? e
+                                                                              .target
+                                                                              .value
+                                                                        : r,
                                                             ),
                                                         )
                                                     }
@@ -753,12 +816,15 @@ export default function ShowIR({
                                             type="checkbox"
                                             checked={loeCertified}
                                             onChange={(e) =>
-                                                setLoeCertified(e.target.checked)
+                                                setLoeCertified(
+                                                    e.target.checked,
+                                                )
                                             }
                                             className="mt-0.5 h-4 w-4 accent-primary shrink-0"
                                         />
                                         <span className="text-sm text-foreground leading-snug">
-                                            I hereby certify that the above information is{" "}
+                                            I hereby certify that the above
+                                            information is{" "}
                                             <span className="font-semibold">
                                                 true and correct
                                             </span>
@@ -770,7 +836,9 @@ export default function ShowIR({
                                         <Button
                                             disabled={
                                                 submitting ||
-                                                loeReasons.some((r) => !r.trim()) ||
+                                                loeReasons.some(
+                                                    (r) => !r.trim(),
+                                                ) ||
                                                 !loeCertified
                                             }
                                             onClick={() =>
@@ -789,21 +857,25 @@ export default function ShowIR({
                             {svCanAssess && (
                                 <ActionPanel title="Submit Supervisor Assessment">
                                     <p className="text-sm text-muted-foreground">
-                                        Provide your assessment and recommendation after
-                                        reviewing the LOE.
+                                        Provide your assessment and
+                                        recommendation after reviewing the LOE.
                                     </p>
                                     <div className="space-y-4">
                                         <div>
                                             <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
                                                 Assessment / Counseling Notes{" "}
-                                                <span className="text-red-500">*</span>
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
                                             </p>
                                             <Textarea
                                                 rows={5}
                                                 placeholder="Describe the admin hearing / counseling conducted..."
                                                 value={assessment}
                                                 onChange={(e) =>
-                                                    setAssessment(e.target.value)
+                                                    setAssessment(
+                                                        e.target.value,
+                                                    )
                                                 }
                                                 className="text-sm"
                                             />
@@ -811,14 +883,18 @@ export default function ShowIR({
                                         <div>
                                             <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
                                                 Recommendation{" "}
-                                                <span className="text-red-500">*</span>
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
                                             </p>
                                             <Textarea
                                                 rows={4}
                                                 placeholder="Enter your recommendation (e.g. suspension, warning, dismissal, etc.)"
                                                 value={recommendation}
                                                 onChange={(e) =>
-                                                    setRecommendation(e.target.value)
+                                                    setRecommendation(
+                                                        e.target.value,
+                                                    )
                                                 }
                                                 className="text-sm"
                                             />
@@ -848,13 +924,20 @@ export default function ShowIR({
                             {hrCanRevalidate && (
                                 <ActionPanel title="HR Re-validation">
                                     <p className="text-sm text-muted-foreground">
-                                        Supervisor has submitted their assessment. Review
-                                        and decide whether to proceed.
+                                        Supervisor has submitted their
+                                        assessment. Review and decide whether to
+                                        proceed.
                                     </p>
                                     <div className="flex gap-6">
                                         {[
-                                            { v: true, label: "Proceed to Dept Approval" },
-                                            { v: false, label: "Mark as Invalid" },
+                                            {
+                                                v: true,
+                                                label: "Proceed to Dept Approval",
+                                            },
+                                            {
+                                                v: false,
+                                                label: "Mark as Invalid",
+                                            },
                                         ].map(({ v, label }) => (
                                             <label
                                                 key={label}
@@ -862,7 +945,9 @@ export default function ShowIR({
                                             >
                                                 <input
                                                     type="radio"
-                                                    checked={revalidateProceed === v}
+                                                    checked={
+                                                        revalidateProceed === v
+                                                    }
                                                     onChange={() =>
                                                         setRevalidateProceed(v)
                                                     }
@@ -878,14 +963,18 @@ export default function ShowIR({
                                         <div>
                                             <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
                                                 Reason{" "}
-                                                <span className="text-red-500">*</span>
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
                                             </p>
                                             <Textarea
                                                 rows={3}
                                                 placeholder="State the reason for marking as invalid..."
                                                 value={revalidateRemarks}
                                                 onChange={(e) =>
-                                                    setRevalidateRemarks(e.target.value)
+                                                    setRevalidateRemarks(
+                                                        e.target.value,
+                                                    )
                                                 }
                                                 className="text-sm"
                                             />
@@ -917,8 +1006,8 @@ export default function ShowIR({
                             {dhCanReview && (
                                 <ActionPanel title="Department Head Review">
                                     <p className="text-sm text-muted-foreground">
-                                        Approve or disapprove the IR to proceed to DA
-                                        phase.
+                                        Approve or disapprove the IR to proceed
+                                        to DA phase.
                                     </p>
                                     <div className="flex gap-6">
                                         {[
@@ -931,7 +1020,9 @@ export default function ShowIR({
                                             >
                                                 <input
                                                     type="radio"
-                                                    checked={revalidateProceed === v}
+                                                    checked={
+                                                        revalidateProceed === v
+                                                    }
                                                     onChange={() =>
                                                         setRevalidateProceed(v)
                                                     }
@@ -947,14 +1038,18 @@ export default function ShowIR({
                                         <div className="mt-3">
                                             <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
                                                 Remarks{" "}
-                                                <span className="text-red-500">*</span>
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
                                             </p>
                                             <Textarea
                                                 rows={3}
                                                 placeholder="Reason for disapproval..."
                                                 value={revalidateRemarks}
                                                 onChange={(e) =>
-                                                    setRevalidateRemarks(e.target.value)
+                                                    setRevalidateRemarks(
+                                                        e.target.value,
+                                                    )
                                                 }
                                                 className="text-sm"
                                             />
@@ -984,13 +1079,16 @@ export default function ShowIR({
                             {hrCanIssueDa && (
                                 <ActionPanel title="Issue Disciplinary Action">
                                     <p className="text-sm text-muted-foreground">
-                                        The IR has been approved. Issue a Disciplinary
-                                        Action to proceed with the DA signing workflow.
+                                        The IR has been approved. Issue a
+                                        Disciplinary Action to proceed with the
+                                        DA signing workflow.
                                     </p>
                                     <div className="flex justify-end">
                                         <Button
                                             disabled={submitting}
-                                            onClick={() => post("ir.issueDa", {})}
+                                            onClick={() =>
+                                                post("ir.issueDa", {})
+                                            }
                                         >
                                             Issue DA
                                         </Button>

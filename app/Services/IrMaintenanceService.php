@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\IrCodeNo;
 use App\Repositories\IrMaintenanceRepository;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 
 class IrMaintenanceService
 {
@@ -140,23 +139,9 @@ class IrMaintenanceService
     {
         if (empty($empNos)) return [];
 
-        $baseUrl = rtrim(config('services.hris.url'), '/');
-        $key     = config('services.hris.key');
-
-        $responses = Http::pool(fn ($pool) => array_map(
-            fn ($no) => $pool->withHeaders(['X-Internal-Key' => $key])
-                ->get("{$baseUrl}/api/employees/{$no}"),
-            $empNos
-        ));
-
-        $nameMap = [];
-        foreach ($empNos as $i => $no) {
-            $res = $responses[$i] ?? null;
-            if ($res && !$res->failed()) {
-                $nameMap[(int) $no] = $res->json('data.emp_name');
-            }
-        }
-
-        return $nameMap;
+        return array_map(
+            fn ($info) => $info['emp_name'] ?? null,
+            $this->hris->fetchEmployeesBulk($empNos)
+        );
     }
 }

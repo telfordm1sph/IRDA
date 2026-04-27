@@ -156,7 +156,7 @@ class IrRequestService
             $ir->reasons->isNotEmpty(),
         );
 
-        // Collect all unique emp_nos to resolve via HRIS — subject + requestor + approvers + DA requestor
+        // ── Collect all emp_nos that need a display name ──────────────────────
         $approverEmpNos = $ir->approvals
             ->pluck('approver_emp_no')
             ->filter()
@@ -169,48 +169,30 @@ class IrRequestService
             $ir->daRequest?->da_requestor_emp_no,
         ]);
 
-        $allEmpNos = array_unique(array_merge([$ir->emp_no], $approverEmpNos, $extraEmpNos));
+        $allEmpNos = array_unique(
+            array_merge([$ir->emp_no], $approverEmpNos, $extraEmpNos)
+        );
 
-        $baseUrl = rtrim(config('services.hris.url'), '/');
-        $key     = config('services.hris.key');
+        // ── 2 HTTP calls instead of N+1 ───────────────────────────────────────
+        // fetchEmployeesBulk returns (int)emp_no → ['emp_name', ...]
+        $nameMap = $this->hris->fetchEmployeesBulk($allEmpNos);
 
-        // Fetch subject employee + work details + all approver names concurrently
-        $responses = Http::pool(function ($pool) use ($allEmpNos, $ir, $baseUrl, $key) {
-            $requests = [];
-            foreach ($allEmpNos as $empNo) {
-                $requests[] = $pool->withHeaders(['X-Internal-Key' => $key])
-                    ->get("{$baseUrl}/api/employees/{$empNo}");
-            }
-            // Work details for the subject employee only
-            $requests[] = $pool->withHeaders(['X-Internal-Key' => $key])
-                ->get("{$baseUrl}/api/employees/{$ir->emp_no}/work");
-            return $requests;
-        });
-
-        // Map responses back: first N = emp names, last = work details
-        $nameMap = [];
-        foreach ($allEmpNos as $i => $empNo) {
-            $res = $responses[$i] ?? null;
-            if ($res && !$res->failed()) {
-                $nameMap[(int) $empNo] = $res->json('data.emp_name');
-            }
-        }
-        $workRes = $responses[count($allEmpNos)] ?? null;
-        $workRaw = ($workRes && !$workRes->failed()) ? $workRes->json('data') : null;
+        // Work details are only needed for the IR subject, keep as a single call
+        $workRaw = $this->hris->fetchWorkDetails((int) $ir->emp_no);
 
         return [
             'id'                => $ir->id,
             'ir_no'             => $ir->ir_no,
             'emp_no'            => $ir->emp_no,
-            'emp_name'          => $nameMap[$ir->emp_no] ?? null,
+            'emp_name'          => $nameMap[$ir->emp_no]['emp_name'] ?? null,
             'company_id'        => (int) ($workRaw['company_id'] ?? 0),
             'company'           => $workRaw['company'] ?? null,
-            'shift'             => $workRaw['shift_type']   ?? null,
-            'team'              => $workRaw['team']         ?? null,
-            'department'        => $workRaw['emp_dept']   ?? null,
-            'station'           => $workRaw['emp_station']      ?? null,
+            'shift'             => $workRaw['shift_type'] ?? null,
+            'team'              => $workRaw['team'] ?? null,
+            'department'        => $workRaw['emp_dept'] ?? null,
+            'station'           => $workRaw['emp_station'] ?? null,
             'prodline'          => $workRaw['emp_prodline'] ?? null,
-            'position'          => $workRaw['emp_jobtitle']     ?? null,
+            'position'          => $workRaw['emp_jobtitle'] ?? null,
             'quality_violation' => $ir->quality_violation,
             'reference'         => $ir->reference,
             'what'              => $ir->what,
@@ -224,17 +206,17 @@ class IrRequestService
             'is_inactive'       => $ir->is_inactive,
             'display_status'    => $displayStatus,
             'requestor_id'      => $ir->requestor_id,
-            'requestor_name'    => $nameMap[$ir->requestor_id] ?? null,
+            'requestor_name'    => $nameMap[$ir->requestor_id]['emp_name'] ?? null,
             'violations'        => $ir->irList->map(fn($l) => [
-                'id'                  => $l->id,
-                'code_no'             => $l->code_no,
-                'violation'           => $l->violation,
-                'da_type'             => $l->da_type,
-                'date_committed'      => $l->date_committed,
-                'offense_no'          => $l->offense_no,
-                'valid'               => $l->valid,
-                'date_of_suspension'  => $l->DATE_of_suspension?->format('Y-m-d'),
-                'days_no'             => $l->days_no,
+                'id'                 => $l->id,
+                'code_no'            => $l->code_no,
+                'violation'          => $l->violation,
+                'da_type'            => $l->da_type,
+                'date_committed'     => $l->date_committed,
+                'offense_no'         => $l->offense_no,
+                'valid'              => $l->valid,
+                'date_of_suspension' => $l->DATE_of_suspension?->format('Y-m-d'),
+                'days_no'            => $l->days_no,
             ])->values(),
             'reasons'           => $ir->reasons->map(fn($r) => [
                 'seq'         => $r->seq,
@@ -243,7 +225,7 @@ class IrRequestService
             'approvals'         => $ir->approvals->map(fn($a) => [
                 'role'            => $a->role,
                 'approver_emp_no' => (int) $a->approver_emp_no,
-                'approver_name'   => $nameMap[(int) $a->approver_emp_no] ?? null,
+                'approver_name'   => $nameMap[(int) $a->approver_emp_no]['emp_name'] ?? null,
                 'status'          => $a->status,
                 'sign_date'       => $a->sign_date?->format('Y-m-d H:i'),
                 'da_sign_date'    => $a->da_sign_date?->format('Y-m-d H:i'),
@@ -252,7 +234,7 @@ class IrRequestService
             'da_request'        => $ir->daRequest ? [
                 'da_status'           => $ir->daRequest->da_status,
                 'da_requestor_emp_no' => (int) $ir->daRequest->da_requestor_emp_no,
-                'da_requestor_name'   => $nameMap[(int) $ir->daRequest->da_requestor_emp_no] ?? null,
+                'da_requestor_name'   => $nameMap[(int) $ir->daRequest->da_requestor_emp_no]['emp_name'] ?? null,
                 'da_requested_date'   => $ir->daRequest->da_requested_date?->format('Y-m-d H:i'),
                 'acknowledge_da'      => $ir->daRequest->acknowledge_da,
                 'acknowledge_date'    => $ir->daRequest->acknowledge_date?->format('Y-m-d H:i'),
@@ -290,27 +272,7 @@ class IrRequestService
             ->values()
             ->all();
 
-        // Bulk-resolve names from HRIS
-        $nameMap = [];
-        if (!empty($empNos)) {
-            $baseUrl = rtrim(config('services.hris.url'), '/');
-            $key     = config('services.hris.key');
-            $responses = \Illuminate\Support\Facades\Http::pool(function ($pool) use ($empNos, $baseUrl, $key) {
-                return array_map(fn($no) => $pool->withHeaders(['X-Internal-Key' => $key])
-                    ->get("{$baseUrl}/api/employees/{$no}"), $empNos);
-            });
-            foreach ($empNos as $i => $no) {
-                $res = $responses[$i] ?? null;
-                if ($res && !$res->failed()) {
-                    $nameMap[(int) $no] = $res->json('data.emp_name');
-                }
-            }
-        }
-
-        $staffMap = [];
-        foreach ($nameMap as $no => $name) {
-            $staffMap[(int) $no] = ['emp_name' => $name, 'department' => null, 'prodline' => null, 'station' => null];
-        }
+        $staffMap = $this->hris->fetchEmployeesBulk($empNos);
 
         $items = collect($paginator->items())->map(fn(IrRequest $ir) => $this->mapIrRow($ir, $staffMap));
 

@@ -66,8 +66,8 @@ class IrConstants
     const IR_ONLY_COMPANY_IDS = [5];
 
     // ── Violation Type (ir_requests.quality_violation) ───────────────────────
-    const VIOLATION_ADMINISTRATIVE = 0;
-    const VIOLATION_QUALITY        = 1;
+    const VIOLATION_ADMINISTRATIVE = 1;
+    const VIOLATION_QUALITY        = 2;
 
     // ── Read Status (ir_requests.read_status) ────────────────────────────────
     const READ_UNREAD = 0;

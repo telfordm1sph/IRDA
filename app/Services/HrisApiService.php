@@ -42,7 +42,7 @@ class HrisApiService
      * Fetch work details for a single employee.
      *
      * Actual HRIS API response (GET /api/employees/{id}/work → data):
-     *   accstatus        1|2            1=active, 2=separated
+     *   accstatus        1|2            1=active, 2=inactive
      *   emp_status_id    0|1            0=probationary, 1=regular
      *   emp_prodline_id  int            production line numeric ID
      *   emp_prodline     string         production line name e.g. "PL8"
@@ -232,6 +232,66 @@ class HrisApiService
             return is_array($data) ? $data : [];
         } catch (\Exception $e) {
             Log::error("HRIS fetchDirectReports exception: {$e->getMessage()}", ['emp_id' => $empId]);
+            return [];
+        }
+    }
+
+    /**
+     * Fetch basic info for multiple employees in a single bulk request.
+     *
+     * Calls POST /api/employees/bulk with { "emp_nos": [...] }
+     * Expected response:
+     *   {
+     *     "data": {
+     *       "<emp_no>": {
+     *         "emp_name":   "Juan dela Cruz",
+     *         "department": "Production",
+     *         "prodline":   "PL8",
+     *         "station":    "Station A"
+     *       },
+     *       ...
+     *     }
+     *   }
+     *
+     * Returns a map of (int) emp_no → ['emp_name', 'department', 'prodline', 'station'].
+     * Missing or failed entries are omitted.
+     */
+    public function fetchEmployeesBulk(array $empNos): array
+    {
+        if (empty($empNos)) {
+            return [];
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'X-Internal-Key' => $this->key,
+            ])->post("{$this->baseUrl}/api/employees/bulk", [
+                'emp_nos' => array_values(array_unique($empNos)),
+            ]);
+
+            if ($response->failed()) {
+                Log::warning('HRIS fetchEmployeesBulk failed', [
+                    'status'  => $response->status(),
+                    'emp_nos' => $empNos,
+                ]);
+                return [];
+            }
+
+            $data = $response->json('data') ?? [];
+            $map  = [];
+            foreach ($data as $no => $info) {
+                if (!is_array($info)) continue;
+                $map[(int) $no] = [
+                    'emp_name'   => $info['emp_name']   ?? null,
+                    'department' => $info['department']  ?? null,
+                    'prodline'   => $info['prodline']    ?? null,
+                    'station'    => $info['station']     ?? null,
+                ];
+            }
+
+            return $map;
+        } catch (\Exception $e) {
+            Log::error("HRIS fetchEmployeesBulk exception: {$e->getMessage()}", ['emp_nos' => $empNos]);
             return [];
         }
     }
